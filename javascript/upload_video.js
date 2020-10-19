@@ -14,12 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-var signinCallback = function (result){
+var signinCallback = function (results){
+  const result = results.getAuthResponse(true);
   if(result.access_token) {
     var uploadVideo = new UploadVideo();
     uploadVideo.ready(result.access_token);
   }
 };
+
+
+var signinErrorCallback = function() {
+  console.log('login error');
+}
 
 var STATUS_POLLING_INTERVAL_MILLIS = 60 * 1000; // One minute.
 
@@ -97,7 +103,7 @@ UploadVideo.prototype.uploadFile = function(file) {
   var metadata = {
     snippet: {
       title: $('#title').val(),
-      description: $('#description').text(),
+      description: $('#description').val(),
       tags: this.tags,
       categoryId: this.categoryId
     },
@@ -175,7 +181,7 @@ UploadVideo.prototype.pollForVideoStatus = function() {
         // The status polling failed.
         console.log(response.error.message);
         setTimeout(this.pollForVideoStatus.bind(this), STATUS_POLLING_INTERVAL_MILLIS);
-      } else {
+      } else if (response.items && response.items[0]) {
         var uploadStatus = response.items[0].status.uploadStatus;
         switch (uploadStatus) {
           // This is a non-final status, so we need to poll again.
@@ -193,6 +199,8 @@ UploadVideo.prototype.pollForVideoStatus = function() {
             $('#post-upload-status').append('<li>Transcoding failed.</li>');
             break;
         }
+      } else {
+        console.log(response);
       }
     }.bind(this)
   });

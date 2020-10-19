@@ -2,6 +2,8 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <meta name="google-signin-client_id" content="__YOUR_CLIENT_ID__">
+
     <title>YouTube API Uploads via CORS</title>
     <link rel="stylesheet" href="upload_video.css">
     <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Open+Sans' type='text/css'>
@@ -11,10 +13,9 @@
       <!-- IMPORTANT: Replace the value of the <code>data-clientid</code>
            attribute in the following tag with your project's client ID. -->
       <span
-        class="g-signin"
-        data-callback="signinCallback"
-        data-clientid="1034451067661-h7v9fipq91k83log7c47f49l1o257rl4.apps.googleusercontent.com"
-        data-cookiepolicy="single_host_origin"
+        class="g-signin2"
+        data-onsuccess="signinCallback"
+        data-onfailure="signinErrorCallback"
         data-scope="https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube">
       </span>
     </span>
