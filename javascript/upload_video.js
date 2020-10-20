@@ -18,7 +18,11 @@ var signinCallback = function (results){
   const result = results.getAuthResponse(true);
   if(result.access_token) {
     var uploadVideo = new UploadVideo();
-    uploadVideo.ready(result.access_token);
+    if (gapi.client) {
+      uploadVideo.ready(result.access_token);
+    } else {
+      console.warn(`gapi.client is undefined`);
+    }
   }
 };
 
