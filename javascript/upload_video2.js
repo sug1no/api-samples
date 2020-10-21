@@ -20,7 +20,8 @@ function handleAPILoaded(authResults) {
   signinCallback(authResults);
 }
 
-var signinCallback = function (result){
+var signinCallback = function (authResult){
+  const result = authResult.getAuthResponse();
   if(result.access_token) {
     var uploadVideo = new UploadVideo();
     if (gapi.client) {
