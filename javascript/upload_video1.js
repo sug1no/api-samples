@@ -14,8 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-var signinCallback = function (results){
-  const result = results.getAuthResponse(true);
+// After the API loads, call a function to get the uploads playlist ID.
+function handleAPILoaded(authResults) {
+  console.log(authResults);
+  signinCallback(authResults);
+}
+
+var signinCallback = function (result){
   if(result.access_token) {
     var uploadVideo = new UploadVideo();
     if (gapi.client) {

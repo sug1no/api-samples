@@ -2,22 +2,16 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <meta name="google-signin-client_id2" content="__CLIENT_ID__">
+    <meta name="google-signin-client_id" content="__CLIENT_ID__">
     <title>YouTube API Uploads via CORS</title>
     <link rel="stylesheet" href="upload_video.css">
     <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Open+Sans' type='text/css'>
   </head>
   <body>
-    <span id="signinButton" class="pre-sign-in">
-      <!-- IMPORTANT: Replace the value of the <code>data-clientid</code>
-           attribute in the following tag with your project's client ID. -->
-      <span
-        class="g-signin2"
-        data-onsuccess="signinCallback"
-        data-onfailure="signinErrorCallback"
-        data-scope="https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube">
-      </span>
-    </span>
+    <div id="login-container" class="pre-auth">
+      This application requires access to your YouTube account.
+      Please <a href="#" id="login-link">authorize</a> to continue.
+    </div>
 
     <div class="post-sign-in">
       <div>
@@ -59,7 +53,8 @@
     </div>
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <script src="//apis.google.com/js/client:plusone.js"></script>
+    <script type="text/javascript" src="auth1.js"></script>
+    <script src="https://apis.google.com/js/client.js?onload=googleApiClientReady"></script>
     <script src="cors_upload.js"></script>
     <script src="upload_video1.js"></script>
   </body>
