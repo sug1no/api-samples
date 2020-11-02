@@ -78,7 +78,7 @@ def get_authenticated_service():
   # https://github.com/FlowMachinesStudio/fmpro_server/commit/874efc7f67c71cb9c9f437b81db85158b6192995
 
   JWKS_URI = 'https://www.googleapis.com/oauth2/v3/certs'
-  # GOOGLE_ISSUER = 'https://accounts.google.com'
+  GOOGLE_ISSUER_URI = 'https://accounts.google.com'
   GOOGLE_ISSUER = 'accounts.google.com'
 
   try:
@@ -90,10 +90,11 @@ def get_authenticated_service():
     jwk_set = res.json()
     jwk = next(filter(lambda k: k['kid'] == header['kid'], jwk_set['keys']))
     public_key = RSAAlgorithm.from_jwk(json.dumps(jwk))
+    issuer = GOOGLE_ISSUER if unsafeclaims['iss'] == GOOGLE_ISSUER else GOOGLE_ISSUER_URI
     # Verify
     claims = jwt.decode(id_token,
                         public_key,
-                        issuer=unsafeclaims['iss'],
+                        issuer=issuer,
                         audience=settings_SOCIAL_AUTH_GOOGLE_CLIENT_ID,
                         algorithms=["RS256"])
     logger.debug("JWT decode. claims: [{}]".format(claims))
