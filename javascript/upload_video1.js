@@ -17,8 +17,10 @@ limitations under the License.
 // After the API loads, call a function to get the uploads playlist ID.
 function handleAPILoaded(authResults) {
   console.log(authResults);
-  console.log(`id_token: ${authResults.id_token}`);
-  console.log(`access_token: ${authResults.access_token}`);
+  console.log(`id_token: `);
+  console.log(authResults.id_token);
+  console.log(`access_token: `);
+  console.log(authResults.access_token);
   signinCallback(authResults);
 }
 
