@@ -14,6 +14,17 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from google_auth_oauthlib.flow import InstalledAppFlow
 
+# pip install pyjwt
+# pip install cryptography
+# pip install jwt
+from jwt.algorithms import RSAAlgorithm
+import jwt
+
+import requests
+import json
+
+from logging import getLogger
+logger = getLogger(__name__)
 
 # Explicitly tell the underlying HTTP transport library not to retry, since
 # we are handling retry logic ourselves.
@@ -42,7 +53,8 @@ RETRIABLE_STATUS_CODES = [500, 502, 503, 504]
 #   https://developers.google.com/youtube/v3/guides/authentication
 # For more information about the client_secrets.json file format, see:
 #   https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
-CLIENT_SECRETS_FILE = 'client_secret.json'
+# specify clientid and secret to verify and use to inboke youtube API (ex.. for webapp).
+CLIENT_SECRETS_FILE = 'client_secret_webapp.json'
 
 # This OAuth 2.0 access scope allows an application to upload files to the
 # authenticated user's YouTube channel, but doesn't allow other types of access.
@@ -56,7 +68,43 @@ VALID_PRIVACY_STATUSES = ('public', 'private', 'unlisted')
 # Authorize the request and store authorization credentials.
 def get_authenticated_service():
   flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
-  credentials = flow.run_console()
+
+  clientId = flow.client_config['client_id']
+  clienSecret = flow.client_config['client_secret']
+  idToken = input('Enter the authorized id_token for client_id=%s: ' % clientId)
+  settings_SOCIAL_AUTH_GOOGLE_CLIENT_ID = clientId;
+
+
+  # https://github.com/FlowMachinesStudio/fmpro_server/commit/874efc7f67c71cb9c9f437b81db85158b6192995
+
+  JWKS_URI = 'https://www.googleapis.com/oauth2/v3/certs'
+  # GOOGLE_ISSUER = 'https://accounts.google.com'
+  GOOGLE_ISSUER = 'accounts.google.com'
+
+  try:
+    id_token = idToken
+    unsafeclaims = jwt.decode(id_token, verify=False)
+    header = jwt.get_unverified_header(id_token)
+    # Get Public Key
+    res = requests.get(JWKS_URI)
+    jwk_set = res.json()
+    jwk = next(filter(lambda k: k['kid'] == header['kid'], jwk_set['keys']))
+    public_key = RSAAlgorithm.from_jwk(json.dumps(jwk))
+    # Verify
+    claims = jwt.decode(id_token,
+                        public_key,
+                        issuer=unsafeclaims['iss'],
+                        audience=settings_SOCIAL_AUTH_GOOGLE_CLIENT_ID,
+                        algorithms=["RS256"])
+    logger.debug("JWT decode. claims: [{}]".format(claims))
+  except Exception as e:
+    logger.error("JWT decode False. [{}] [{}]".format(id_token, e))
+    raise AuthenticationFailed("JWT decode False.")
+
+
+
+
+  # credentials = flow.run_console()
   return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
 
 def initialize_upload(youtube, options):
