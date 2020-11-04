@@ -7,25 +7,13 @@ import os
 import random
 import time
 
-import google.oauth2.id_token
-import google.auth.jwt
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
-import google.auth.transport
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from google_auth_oauthlib.flow import InstalledAppFlow
-
-# pip install pyjwt
-# pip install cryptography
-# pip install jwt
-from jwt.algorithms import RSAAlgorithm
-import jwt
-
-import requests
-import json
 
 from logging import getLogger
 logger = getLogger(__name__)
@@ -75,55 +63,19 @@ def get_authenticated_service():
 
   clientId = flow.client_config['client_id']
   clienSecret = flow.client_config['client_secret']
-  idToken = input('Enter the authorized id_token for client_id=%s: ' % clientId)
   accessToken = input('Enter the authorized access_token for client_id=%s: ' % clientId)
-  settings_SOCIAL_AUTH_GOOGLE_CLIENT_ID = clientId;
-
-
-  # https://github.com/FlowMachinesStudio/fmpro_server/commit/874efc7f67c71cb9c9f437b81db85158b6192995
-
-  JWKS_URI = 'https://www.googleapis.com/oauth2/v3/certs'
-  GOOGLE_ISSUER_URI = 'https://accounts.google.com'
-  GOOGLE_ISSUER = 'accounts.google.com'
-
+ 
   try:
-    id_token = idToken
-    unsafeclaims = jwt.decode(id_token, verify=False)
-    header = jwt.get_unverified_header(id_token)
-    # Get Public Key
-    res = requests.get(JWKS_URI)
-    jwk_set = res.json()
-    jwk = next(filter(lambda k: k['kid'] == header['kid'], jwk_set['keys']))
-    public_key = RSAAlgorithm.from_jwk(json.dumps(jwk))
-    issuer = GOOGLE_ISSUER if unsafeclaims['iss'] == GOOGLE_ISSUER else GOOGLE_ISSUER_URI
-    # Verify
-    claims = jwt.decode(id_token,
-                        public_key,
-                        issuer=issuer,
-                        audience=settings_SOCIAL_AUTH_GOOGLE_CLIENT_ID,
-                        algorithms=["RS256"])
-    logger.debug("JWT decode. claims: [{}]".format(claims))
-
-
-    idInfo = google.oauth2.id_token.verify_oauth2_token(id_token,
-      google.auth.transport.requests.Request(),
-      settings_SOCIAL_AUTH_GOOGLE_CLIENT_ID);
     credentials = google.oauth2.credentials.Credentials(token=accessToken,
-      id_token=idToken,
-      client_id=flow.client_config['client_id'],
-      client_secret=flow.client_config['client_secret'],
+      client_id=clientId,
+      client_secret=clienSecret,
       token_uri=flow.client_config['token_uri']
       );
 
-
   except Exception as e:
-    logger.error("JWT decode False. [{}] [{}]".format(id_token, e))
-    raise AuthenticationFailed("JWT decode False.")
+    logger.error("failed to create Credentials: [{}] [{}]".format(id_token, e))
+    raise AuthenticationFailed("failed to create Credentials")
 
-
-
-
-  # credentials = flow.run_console()
   return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
 
 def initialize_upload(youtube, options):
@@ -225,6 +177,8 @@ if __name__ == '__main__':
     channel = channels_response['items'][0]
     for k, v in channel.items():
       print(k, v)
+
+    doUpload = input('hit return to upload:')
 
     initialize_upload(youtube, args)
   except HttpError as e:
