@@ -7,8 +7,12 @@ import os
 import random
 import time
 
+import google.oauth2.id_token
+import google.auth.jwt
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
+import google.auth.transport
+
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
@@ -72,6 +76,7 @@ def get_authenticated_service():
   clientId = flow.client_config['client_id']
   clienSecret = flow.client_config['client_secret']
   idToken = input('Enter the authorized id_token for client_id=%s: ' % clientId)
+  accessToken = input('Enter the authorized access_token for client_id=%s: ' % clientId)
   settings_SOCIAL_AUTH_GOOGLE_CLIENT_ID = clientId;
 
 
@@ -98,6 +103,19 @@ def get_authenticated_service():
                         audience=settings_SOCIAL_AUTH_GOOGLE_CLIENT_ID,
                         algorithms=["RS256"])
     logger.debug("JWT decode. claims: [{}]".format(claims))
+
+
+    idInfo = google.oauth2.id_token.verify_oauth2_token(id_token,
+      google.auth.transport.requests.Request(),
+      settings_SOCIAL_AUTH_GOOGLE_CLIENT_ID);
+    credentials = google.oauth2.credentials.Credentials(token=accessToken,
+      id_token=idToken,
+      client_id=flow.client_config['client_id'],
+      client_secret=flow.client_config['client_secret'],
+      token_uri=flow.client_config['token_uri']
+      );
+
+
   except Exception as e:
     logger.error("JWT decode False. [{}] [{}]".format(id_token, e))
     raise AuthenticationFailed("JWT decode False.")
@@ -198,6 +216,16 @@ if __name__ == '__main__':
   youtube = get_authenticated_service()
 
   try:
+
+    channels_response = youtube.channels().list(
+      mine=True,
+      part='snippet'
+    ).execute()
+
+    channel = channels_response['items'][0]
+    for k, v in channel.items():
+      print(k, v)
+
     initialize_upload(youtube, args)
-  except (HttpError, e):
+  except HttpError as e:
     print(('An HTTP error %d occurred:\n%s' % (e.resp.status, e.content)))
